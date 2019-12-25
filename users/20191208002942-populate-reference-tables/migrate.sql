@@ -39,3 +39,16 @@ values
   (0, 'password'),
   (1, 'temp_credential'),
   (2, 'application');
+
+
+
+
+
+-- 
+-- Populate the list of Verification Types
+-- 
+insert into verification_type
+  (id, description)
+values
+  (0, 'email'),
+  (1, 'phone');

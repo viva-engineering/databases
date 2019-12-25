@@ -20,8 +20,10 @@ create table user (
   email_discoverable tinyint unsigned not null default 0,
   email_visibility_id tinyint unsigned not null default 0,
 
-  -- The user's phone number (optional) and related flags
+  -- The user's phone number (optional) and related flags (verification
+  -- not currently used, may be used in the future for SMS authentication)
   phone varchar(255),
+  phone_verified tinyint unsigned not null default 0,
   phone_discoverable tinyint unsigned not null default 0,
   phone_visibility_id tinyint unsigned not null default 0,
 
@@ -272,6 +274,11 @@ create table credential (
   -- update credentials.
   compromised tinyint not null default 0,
 
+  -- When a temporary credential is used to verify another device / account, that information
+  -- is stored here so it can be used when the credential is used.
+  verification_type_id tinyint unsigned,
+  verification_value varchar(255),
+
   -- Record Metadata
   create_timestamp timestamp not null default now(),
   update_timetsamp timestamp not null default now() on update now(),
@@ -288,7 +295,9 @@ create table credential (
   constraint fk_credentials_credential_type_id
     foreign key (credential_type_id) references credential_type (id),
   constraint fk_credentials_application_id
-    foreign key (application_id) references application (id)
+    foreign key (application_id) references application (id),
+  constraint fk_credentials_verification_type_id
+    foreign key (verification_type_id) references verification_type (id)
 )
 engine InnoDB
 character set utf8mb4
