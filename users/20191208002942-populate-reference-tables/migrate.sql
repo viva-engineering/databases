@@ -37,6 +37,5 @@ insert into credential_type
   (id, description)
 values
   (0, 'password'),
-  (1, 'email'),
-  (2, 'application'),
-  (3, 'security_question');
+  (1, 'temp_credential'),
+  (2, 'application');

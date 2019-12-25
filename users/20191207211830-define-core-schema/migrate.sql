@@ -219,7 +219,6 @@ create table application (
   -- Keys/Indexes
   primary key (id),
   index idx_application_owner_user_id (owner_user_id),
-  index idx_application_approved (approved),
 
   -- Foreign Keys
   constraint fk_application_owner_user_id
@@ -307,6 +306,11 @@ create table session (
   id varchar(255) not null collate utf8mb4_bin,
   user_id bigint unsigned not null,
   expiration_timestamp timestamp not null,
+
+  -- An elevated session is needed to perform any sort of account administrative actions,
+  -- such as updating a password, or generating application tokens. These sessions are
+  -- very short lived, and cannot be refreshed.
+  is_elevated tinyint not null default 0,
 
   -- If this session was created by an application on behalf of the user, keep track of
   -- which application created the session
