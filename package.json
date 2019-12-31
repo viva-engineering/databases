@@ -1,0 +1,27 @@
+{
+  "name": "@viva-eng/databases",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "config.js",
+  "dependencies": {
+    "@viva-eng/config-loader": "^1.0.3"
+  },
+  "devDependencies": {
+    "@viva-eng/mysql-migrate": "^2.0.2"
+  },
+  "scripts": {
+    "mym:local": "viva_env=local node ./scripts/run-mym"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viva-engineering/databases.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/viva-engineering/databases/issues"
+  },
+  "homepage": "https://github.com/viva-engineering/databases#readme"
+}

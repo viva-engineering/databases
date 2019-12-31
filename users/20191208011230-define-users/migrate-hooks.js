@@ -1,11 +1,7 @@
 
-const { loadConfig } = require('../../config');
-
 exports.before = async (params) => {
-	const config = await loadConfig();
-
 	return params.sql
-		.replace(/%AUTH_SERVICE_PASSWORD%/g, config.auth_srv_db_users_pass);
+		.replace(/%AUTH_SERVICE_PASSWORD%/g, process.env.auth_srv_db_users_pass);
 };
 
 exports.after = async (error, params) => {
