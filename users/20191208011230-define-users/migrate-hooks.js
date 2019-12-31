@@ -1,9 +1,11 @@
 
-const creds = require('../../../db-credentials.json');
+const { loadConfig } = require('../../config');
 
 exports.before = async (params) => {
+	const config = await loadConfig();
+
 	return params.sql
-		.replace(/%AUTH_SERVICE_PASSWORD%/g, creds.viva_user.viva_auth_service);
+		.replace(/%AUTH_SERVICE_PASSWORD%/g, config.auth_srv_db_users_pass);
 };
 
 exports.after = async (error, params) => {

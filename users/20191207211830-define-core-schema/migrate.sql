@@ -257,8 +257,9 @@ create table credential (
   -- The hash digest of the password / key
   key_digest varchar(255) not null,
 
-  -- Expiration handling (some credentials are automatically expired). Expired credentials
-  -- must be updated upon next login.
+  -- Expiration timestamp for the credential. Expired password credentials can still be used to
+  -- authenticate, but must be updated at that time. Other credential types are purged when they
+  -- expire.
   expiration_timestamp timestamp not null,
 
   -- A counter that keeps track of the number of recent failed authentication attempts with this
@@ -287,6 +288,7 @@ create table credential (
   primary key (id),
   index idx_credential_request_id (request_id),
   index idx_credential_user_id_application_id (user_id, application_id),
+  index idx_credential_cleanup_key (credential_type_id, expiration_timestamp),
   unique index idx_credential_credential_type_id_request_id (credential_type_id, request_id),
 
   -- Constraints
@@ -311,32 +313,37 @@ collate utf8mb4_unicode_ci;
 -- Entity: Session
 -- Description: Represents a single authenticated session
 -- 
-create table session (
-  id varchar(255) not null collate utf8mb4_bin,
-  user_id bigint unsigned not null,
-  expiration_timestamp timestamp not null,
+-- create table session (
+--   id varchar(255) not null collate utf8mb4_bin,
+--   user_id bigint unsigned not null,
+--   expiration_timestamp timestamp not null,
 
-  -- An elevated session is needed to perform any sort of account administrative actions,
-  -- such as updating a password, or generating application tokens. These sessions are
-  -- very short lived, and cannot be refreshed.
-  is_elevated tinyint not null default 0,
+--   -- An elevated session is needed to perform any sort of account administrative actions,
+--   -- such as updating a password, or generating application tokens. These sessions are
+--   -- very short lived, and cannot be refreshed.
+--   is_elevated tinyint not null default 0,
 
-  -- If this session was created by an application on behalf of the user, keep track of
-  -- which application created the session
-  application_id varchar(255) default null,
+--   -- If this session was created by an application on behalf of the user, keep track of
+--   -- which application created the session
+--   application_id varchar(255) default null,
 
-  -- Indexes
-  primary key (id),
-  index idx_session_user_id (user_id),
-  index idx_session_application_id (application_id),
+--   -- Record Metadata
+--   create_timestamp timestamp not null default now(),
+--   update_timetsamp timestamp not null default now() on update now(),
 
-  -- Constraints
-  constraint fk_session_user_id
-    foreign key (user_id) references user (id),
-  constraint fk_session_application_id
-    foreign key (application_id) references application (id)
-)
-engine InnoDB
-character set utf8mb4
-collate utf8mb4_unicode_ci;
+--   -- Indexes
+--   primary key (id),
+--   index idx_session_user_id (user_id),
+--   index idx_session_application_id (application_id),
+--   index idx_session_expiration_timestamp (expiration_timestamp),
+
+--   -- Constraints
+--   constraint fk_session_user_id
+--     foreign key (user_id) references user (id),
+--   constraint fk_session_application_id
+--     foreign key (application_id) references application (id)
+-- )
+-- engine InnoDB
+-- character set utf8mb4
+-- collate utf8mb4_unicode_ci;
 
