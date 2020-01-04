@@ -1,7 +1,8 @@
 
 exports.before = async (params) => {
 	return params.sql
-		.replace(/%AUTH_SERVICE_PASSWORD%/g, process.env.auth_srv_db_users_pass);
+		.replace(/%AUTH_SERVICE_PASSWORD%/g, process.env.auth_srv_db_users_pass)
+		.replace(/%USER_SERVICE_PASSWORD%/g, process.env.user_srv_db_users_pass);
 };
 
 exports.after = async (error, params) => {

@@ -20,8 +20,7 @@ create table user (
   email_discoverable tinyint unsigned not null default 0,
   email_visibility_id tinyint unsigned not null default 0,
 
-  -- The user's phone number (optional) and related flags (verification
-  -- not currently used, may be used in the future for SMS authentication)
+  -- The user's phone number (optional) and related flags
   phone varchar(255),
   phone_verified tinyint unsigned not null default 0,
   phone_discoverable tinyint unsigned not null default 0,
@@ -307,43 +306,4 @@ collate utf8mb4_unicode_ci;
 
 
 
-
-
--- 
--- Entity: Session
--- Description: Represents a single authenticated session
--- 
--- create table session (
---   id varchar(255) not null collate utf8mb4_bin,
---   user_id bigint unsigned not null,
---   expiration_timestamp timestamp not null,
-
---   -- An elevated session is needed to perform any sort of account administrative actions,
---   -- such as updating a password, or generating application tokens. These sessions are
---   -- very short lived, and cannot be refreshed.
---   is_elevated tinyint not null default 0,
-
---   -- If this session was created by an application on behalf of the user, keep track of
---   -- which application created the session
---   application_id varchar(255) default null,
-
---   -- Record Metadata
---   create_timestamp timestamp not null default now(),
---   update_timetsamp timestamp not null default now() on update now(),
-
---   -- Indexes
---   primary key (id),
---   index idx_session_user_id (user_id),
---   index idx_session_application_id (application_id),
---   index idx_session_expiration_timestamp (expiration_timestamp),
-
---   -- Constraints
---   constraint fk_session_user_id
---     foreign key (user_id) references user (id),
---   constraint fk_session_application_id
---     foreign key (application_id) references application (id)
--- )
--- engine InnoDB
--- character set utf8mb4
--- collate utf8mb4_unicode_ci;
 
