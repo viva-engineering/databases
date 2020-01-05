@@ -33,6 +33,8 @@ const args = () => {
 			return [ 'migrate', '-f' ];
 		case 'rollback':
 			return [ 'rollback', '-f' ];
+		case 'bootstrap':
+			return [ 'bootstrap' ];
 	}
 };
 

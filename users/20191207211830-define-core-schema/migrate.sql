@@ -1,7 +1,8 @@
 
 -- 
 -- Entity: User
--- Description: Contains the list of all users in the system
+-- Description: Contains the list of all users in the system and their core
+--   identifying attributes
 -- 
 create table user (
   id bigint unsigned auto_increment not null,
@@ -10,48 +11,19 @@ create table user (
   username varchar(255) unique not null,
   username_discoverable tinyint unsigned not null default 0,
 
-  -- The user's display name and related flags
-  display_name varchar(255) not null default '',
-  display_name_discoverable tinyint unsigned not null default 0,
-
   -- The user's email address (optional) and related flags
   email varchar(255),
-  email_verified tinyint unsigned not null default 0,
   email_discoverable tinyint unsigned not null default 0,
-  email_visibility_id tinyint unsigned not null default 0,
 
   -- The user's phone number (optional) and related flags
   phone varchar(255),
-  phone_verified tinyint unsigned not null default 0,
   phone_discoverable tinyint unsigned not null default 0,
-  phone_visibility_id tinyint unsigned not null default 0,
 
-  -- The user's location (optional) and related flags
-  location varchar(255),
-  location_visibility_id tinyint unsigned not null default 0,
-
-  -- The user's birthday (optional) and related flags
-  birthday date,
-  birthday_visibility_id tinyint unsigned not null default 0,
-
-  -- Content privacy defaults
-  default_post_visibility_id tinyint unsigned not null default 0,
-  default_image_visibility_id tinyint unsigned not null default 0,
-
-  -- Auto-accept follow requests?
-  auto_accept_follows tinyint unsigned not null default 0,
-
-  -- The user's preferred language for the UI (references `viva_i18n`.`code`)
-  preferred_language varchar(255) not null default 'en-us',
-
-  -- Randomly generated user code used for looking up the user's profile from outside
-  -- the service layer. Anyone who has this code can find this user's profile (although
-  -- they may not be able to see much beyond that depending on other settings). User
-  -- codes are intended to be re-generated at any time.
+  -- Randomly generated user code, acting as the user's public facing ID. Anyone who
+  -- has this code can find this user's profile (although they may not be able to
+  -- see much beyond that depending on other settings). User codes are intended to be
+  -- re-generated at any time, and are therefore never referenced in any stored data.
   user_code varchar(255) unique not null collate utf8mb4_bin,
-
-  -- Does this user see explicit content by default?
-  explicit_content_visible tinyint(1) not null default 0,
 
   -- User role, used for assigning elevated permissions
   user_role_id tinyint unsigned not null default 0,
@@ -63,26 +35,87 @@ create table user (
   -- Indexes
   primary key (id),
   index idx_user_username (username, username_discoverable),
-  index idx_user_display_name (display_name, display_name_discoverable),
   index idx_user_email (email, email_discoverable),
+  index idx_user_phone (phone, phone_discoverable),
   index idx_user_user_code (user_code),
-  index idx_user_email_verified (email_verified),
 
   -- Constraints
   constraint fk_user_user_role_id
-    foreign key (user_role_id) references user_role (id),
-  constraint fk_user_email_visibility_id
-    foreign key (email_visibility_id) references visibility_scheme (id),
-  constraint fk_user_phone_visibility_id
-    foreign key (phone_visibility_id) references visibility_scheme (id),
-  constraint fk_user_location_visibility_id
-    foreign key (location_visibility_id) references visibility_scheme (id),
-  constraint fk_user_birthday_visibility_id
-    foreign key (birthday_visibility_id) references visibility_scheme (id),
-  constraint fk_user_default_post_visibility_id
+    foreign key (user_role_id) references user_role (id)
+)
+engine InnoDB
+character set utf8mb4
+collate utf8mb4_unicode_ci;
+
+
+
+
+
+-- 
+-- Entity: User Preferences
+-- Description: Represents a user's preferences, settings, and profile. This table has a
+--   1-to-1 relationship with the user table, storing additional user info to keep the
+--   user table thinner.
+-- 
+create table user_preferences (
+  user_id bigint unsigned not null,
+
+  -- The user's display name, used in the UI in place of username
+  display_name varchar(255) not null default '',
+
+  -- Does this user see explicit content by default?
+  explicit_content_visible tinyint(1) not null default 0,
+
+  -- Content privacy defaults
+  default_post_visibility_id tinyint unsigned not null default 0,
+  default_image_visibility_id tinyint unsigned not null default 0,
+
+  -- The user's location (optional) and related flags
+  location varchar(255),
+  location_visibility_id tinyint unsigned not null default 0,
+
+  -- The user's birthday (optional) and related flags
+  birthday date,
+  birthday_visibility_id tinyint unsigned not null default 0,
+
+  -- The user's bio (optional) and related flags
+  bio varchar(1024),
+  bio_visibility_id tinyint unsigned not null default 0,
+
+  -- Additional visibility flags
+  email_visibility_id tinyint unsigned not null default 0,
+  phone_visibility_id tinyint unsigned not null default 0,
+
+  -- Auto-accept follow requests?
+  auto_accept_follows tinyint unsigned not null default 0,
+
+  -- The user's preferred language for the UI (references `viva_i18n`.`code`)
+  preferred_language varchar(255) not null default 'en-us',
+
+  -- Record Metadata
+  create_timestamp timestamp not null default now(),
+  update_timetsamp timestamp not null default now() on update now(),
+
+  -- Indexes
+  primary key (user_id),
+
+  -- Constraints
+  constraint fk_user_preferences_user_id
+    foreign key (user_id) references user (id),
+  constraint fk_user_preferences_default_post_visibility_id
     foreign key (default_post_visibility_id) references visibility_scheme (id),
-  constraint fk_user_default_image_visibility_id
-    foreign key (default_image_visibility_id) references visibility_scheme (id)
+  constraint fk_user_preferences_default_image_visibility_id
+    foreign key (default_image_visibility_id) references visibility_scheme (id),
+  constraint fk_user_preferences_email_visibility_id
+    foreign key (email_visibility_id) references visibility_scheme (id),
+  constraint fk_user_preferences_phone_visibility_id
+    foreign key (phone_visibility_id) references visibility_scheme (id),
+  constraint fk_user_preferences_location_visibility_id
+    foreign key (location_visibility_id) references visibility_scheme (id),
+  constraint fk_user_preferences_birthday_visibility_id
+    foreign key (birthday_visibility_id) references visibility_scheme (id),
+  constraint fk_user_preferences_bio_visibility_id
+    foreign key (bio_visibility_id) references visibility_scheme (id)
 )
 engine InnoDB
 character set utf8mb4
@@ -243,13 +276,6 @@ create table credential (
   -- The user the credential authenticates
   user_id bigint unsigned not null,
 
-  -- The type of credential this is (eg. password)
-  credential_type_id tinyint unsigned not null,
-
-  -- Some types of authentication require a request ID (like email verification).
-  -- Randomly generated string
-  request_id varchar(255),
-
   -- If this credential is allocated to a given application, this references the application
   application_id varchar(255),
 
@@ -274,31 +300,19 @@ create table credential (
   -- update credentials.
   compromised tinyint not null default 0,
 
-  -- When a temporary credential is used to verify another device / account, that information
-  -- is stored here so it can be used when the credential is used.
-  verification_type_id tinyint unsigned,
-  verification_value varchar(255),
-
   -- Record Metadata
   create_timestamp timestamp not null default now(),
   update_timetsamp timestamp not null default now() on update now(),
 
   -- Indexes
   primary key (id),
-  index idx_credential_request_id (request_id),
   index idx_credential_user_id_application_id (user_id, application_id),
-  index idx_credential_cleanup_key (credential_type_id, expiration_timestamp),
-  unique index idx_credential_credential_type_id_request_id (credential_type_id, request_id),
 
   -- Constraints
   constraint fk_credentials_user_id
     foreign key (user_id) references user (id),
-  constraint fk_credentials_credential_type_id
-    foreign key (credential_type_id) references credential_type (id),
   constraint fk_credentials_application_id
-    foreign key (application_id) references application (id),
-  constraint fk_credentials_verification_type_id
-    foreign key (verification_type_id) references verification_type (id)
+    foreign key (application_id) references application (id)
 )
 engine InnoDB
 character set utf8mb4
